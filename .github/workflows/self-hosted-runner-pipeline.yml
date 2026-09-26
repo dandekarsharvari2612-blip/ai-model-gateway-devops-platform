@@ -1,0 +1,43 @@
+name: Self-Hosted Master-Runner CI/CD Pipeline
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ staging, release/* ]
+
+jobs:
+  build-and-deploy-on-runner:
+    name: Build and Deploy on Self-Hosted AKS Runner
+    runs-on: [self-hosted, master-node, aks-runner]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Verify Runner Node Environment
+        run: |
+          echo "=== RUNNER NODE SYSTEM TELEMETRY ==="
+          hostname
+          uname -a
+          docker version || podman version
+          kubectl version --client=true
+          helm version
+
+      - name: Build Backend & Frontend Container Images
+        run: |
+          docker build -t acrenterpriseai.azurecr.io/ai-backend:${{ github.sha }} ./BE
+          docker build -t acrenterpriseai.azurecr.io/ai-frontend:${{ github.sha }} ./FE
+
+      - name: Apply Kubernetes Manifests directly from Master Node
+        run: |
+          kubectl apply -f ./runner-node-master-node/k8s/00-namespace.yaml
+          kubectl apply -f ./runner-node-master-node/k8s/01-configmap-secrets.yaml
+          kubectl apply -f ./runner-node-master-node/k8s/02-postgres-database.yaml
+          kubectl apply -f ./runner-node-master-node/k8s/03-backend-deployment.yaml
+          kubectl apply -f ./runner-node-master-node/k8s/04-frontend-deployment.yaml
+          kubectl apply -f ./runner-node-master-node/k8s/05-ingress.yaml
+          kubectl apply -f ./runner-node-master-node/k8s/06-backend-hpa.yaml
+
+      - name: Rollout Status Verification
+        run: |
+          kubectl rollout status deployment/ai-backend -n production --timeout=120s
+          kubectl rollout status deployment/ai-frontend -n production --timeout=120s

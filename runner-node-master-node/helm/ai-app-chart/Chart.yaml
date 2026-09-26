@@ -1,0 +1,16 @@
+apiVersion: v2
+name: ai-enterprise-stack
+description: A Production Helm chart for 3-Tier Enterprise AI Gateway on Azure AKS
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - ai
+  - fast-api
+  - react
+  - postgresql
+  - aks
+  - 3-tier
+maintainers:
+  - name: DevOps Engineering Team
+    email: devops@enterprise.internal

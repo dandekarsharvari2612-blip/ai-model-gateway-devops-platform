@@ -1,0 +1,82 @@
+global:
+  environment: "production"
+  registry: "acrenterpriseai.azurecr.io"
+  imagePullPolicy: "IfNotPresent"
+
+# Tier 1: Frontend (React SPA + Nginx)
+frontend:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: "ai-frontend"
+    tag: "latest"
+  service:
+    type: "ClusterIP"
+    port: 80
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+# Tier 2: Backend (FastAPI AI Gateway)
+backend:
+  enabled: true
+  replicaCount: 3
+  image:
+    repository: "ai-backend"
+    tag: "latest"
+  service:
+    type: "ClusterIP"
+    port: 8000
+  defaultModelId: "inhouse-llama3-enterprise"
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "2Gi"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+# Tier 3: Database (PostgreSQL StatefulSet on AKS or Azure PostgreSQL Flexible Server)
+database:
+  deployInternalPostgres: true # Set false if using Azure Database for PostgreSQL Flexible Server
+  host: "postgres-db-service"
+  port: 5432
+  name: "aidatabase"
+  user: "dbadmin"
+  password: "AzureSecurePostgresPass2026!"
+  storage:
+    size: "20Gi"
+    storageClass: "default"
+
+# Optional Cloud Model Credentials
+azureOpenAI:
+  apiKey: ""
+  endpoint: ""
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: "ai-platform.enterprise.internal"
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: backend
+        - path: /
+          pathType: Prefix
+          service: frontend

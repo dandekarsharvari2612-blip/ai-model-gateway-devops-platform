@@ -1,0 +1,15 @@
+# Master Node Configuration Specification
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: master-node-orchestrator-config
+  namespace: actions-runner-system
+data:
+  CLUSTER_NAME: "aks-enterprise-ai-cluster"
+  RESOURCE_GROUP: "rg-enterprise-ai-aks"
+  ACR_REGISTRY: "acrenterpriseai.azurecr.io"
+  RUNNER_LABELS: "self-hosted,master-node,aks-runner,docker-in-docker"
+  AUTO_SCALE_MIN: "2"
+  AUTO_SCALE_MAX: "10"
+  METRICS_PORT: "8080"
+  LOG_LEVEL: "info"

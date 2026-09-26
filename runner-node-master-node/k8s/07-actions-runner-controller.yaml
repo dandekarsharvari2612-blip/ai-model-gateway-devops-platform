@@ -1,0 +1,40 @@
+# Actions Runner Controller (ARC) Runner Deployment and Auto-Scaler Specification for Azure AKS
+apiVersion: actions.summerwind.dev/v1alpha1
+kind: RunnerDeployment
+metadata:
+  name: enterprise-aks-runner-deployment
+  namespace: actions-runner-system
+spec:
+  template:
+    spec:
+      repository: "my-org/April-End-End-Project"
+      labels:
+        - self-hosted
+        - aks-runner
+        - master-node
+        - docker-in-docker
+      dockerdWithinRunner: true
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
+        limits:
+          cpu: "2000m"
+          memory: "4Gi"
+---
+apiVersion: actions.summerwind.dev/v1alpha1
+kind: HorizontalRunnerAutoscaler
+metadata:
+  name: enterprise-aks-runner-autoscaler
+  namespace: actions-runner-system
+spec:
+  scaleTargetRef:
+    name: enterprise-aks-runner-deployment
+  minReplicas: 1
+  maxReplicas: 8
+  metrics:
+  - type: PercentageRunnersBusy
+    scaleUpThreshold: '0.75'
+    scaleDownThreshold: '0.25'
+    scaleUpFactor: '2'
+    scaleDownFactor: '0.5'
