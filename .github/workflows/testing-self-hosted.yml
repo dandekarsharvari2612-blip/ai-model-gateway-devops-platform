@@ -1,0 +1,15 @@
+#nojs
+name: Run the job on self-hosted application
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  testing:
+    runs-on: self-hosted
+
+    steps:
+      - name: Test self-hosted runner
+        run: echo "This is the testing job on Azure runner"
